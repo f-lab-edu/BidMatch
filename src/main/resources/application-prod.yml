@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+    show-sql: false
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+logging:
+  level:
+    com.project.bidmatch: INFO
+    org.hibernate.SQL: INFO
