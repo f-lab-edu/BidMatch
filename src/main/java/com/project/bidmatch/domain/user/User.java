@@ -58,6 +58,15 @@ public class User extends BaseEntity {
     this.penaltyCount = 0;
   }
 
+  public static User signup(String email, String nickname, String encodedPassword) {
+    return User.builder()
+        .email(email)
+        .nickname(nickname)
+        .passwordHash(encodedPassword)
+        .role(UserRole.USER)
+        .build();
+  }
+
   public void updateNickname(String nickname) {
     this.nickname = nickname;
   }
