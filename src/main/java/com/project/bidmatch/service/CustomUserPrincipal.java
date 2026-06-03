@@ -14,6 +14,7 @@ public class CustomUserPrincipal implements UserDetails {
   private final String email;
   private final String password;
   private final Collection<? extends GrantedAuthority> authorities;
+  private final boolean isActive;
 
   @Override
   public String getUsername() {
@@ -37,6 +38,6 @@ public class CustomUserPrincipal implements UserDetails {
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return isActive;
   }
 }

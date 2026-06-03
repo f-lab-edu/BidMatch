@@ -29,7 +29,7 @@ public class BidmatchApplication {
     return args -> {
       User user = User.builder()
           .email("test@bidmatch.com")
-          .password(passwordEncoder.encode("Password1!"))
+          .passwordHash(passwordEncoder.encode("Password1!"))
           .nickname("테스트")
           .role(UserRole.USER)
           .build();
