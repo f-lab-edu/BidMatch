@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.project.bidmatch.domain.user.User;
 import com.project.bidmatch.domain.user.UserRole;
+import com.project.bidmatch.fixture.UserFixture;
 import com.project.bidmatch.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,13 +42,7 @@ public class AuthIntegrationTest {
   @BeforeEach
   void setUp() {
     userRepository.deleteAll();
-    User user = User.builder()
-        .email("test@bidmatch.com")
-        .passwordHash(passwordEncoder.encode(RAW_PASSWORD))
-        .nickname("테스트")
-        .role(UserRole.USER)
-        .build();
-    userRepository.save(user);
+    userRepository.save(UserFixture.aUser().build(passwordEncoder));
   }
 
 
