@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "users")
@@ -77,5 +78,9 @@ public class User extends BaseEntity {
 
   public boolean isActive() {
     return status == UserStatus.ACTIVE;
+  }
+
+  public boolean matchesPassword(String rawPassword, PasswordEncoder encoder) {
+    return encoder.matches(rawPassword, this.passwordHash);
   }
 }
