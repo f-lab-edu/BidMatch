@@ -6,27 +6,28 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class JsonAuthFailureHandler implements AuthenticationFailureHandler {
+public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
   private final ObjectMapper objectMapper;
 
   @Override
-  public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException exception) throws IOException {
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+  // 인증 안 된 사용자가 보호된 자원에 접근했을 때 어떻게 응답할지를 정의함
+  public void commence(HttpServletRequest request, HttpServletResponse response,
+      AuthenticationException authException) throws IOException, ServletException {
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
 
-    ErrorResponse body = ErrorResponse.of(401, "이메일 또는 비밀번호가 일치하지 않습니다");
+    // ErrorResponse 레코드를 재사용해서 일관된 응답 만들기
+    ErrorResponse body = ErrorResponse.of(401, "로그인이 필요합니다");
     response.getWriter().write(objectMapper.writeValueAsString(body));
   }
 }
