@@ -8,8 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.project.bidmatch.domain.user.User;
 import com.project.bidmatch.domain.user.UserRole;
+import com.project.bidmatch.domain.user.UserStatus;
 import com.project.bidmatch.fixture.UserFixture;
 import com.project.bidmatch.repository.UserRepository;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -117,7 +119,7 @@ public class AuthIntegrationTest {
         .email("suspended@bidmatch.com")
         .nickname("정지유저")
         .build(passwordEncoder);
-    suspended.suspend();
+    suspended.suspend(LocalDateTime.now());
     userRepository.save(suspended);
 
     // when & then: 로그인 성공 (200) + 세션 생성
@@ -129,5 +131,17 @@ public class AuthIntegrationTest {
 
     MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
     assertThat(session).isNotNull();
+  }
+
+  @Test
+  @DisplayName("suspend()하면 상태가 SUSPENDED, 정지 만료는 7일 후")
+  void suspend_setsStatusAndUntil() {
+    User user = UserFixture.aUser().build(passwordEncoder);
+    LocalDateTime now = LocalDateTime.of(2026, 6, 6, 10, 0);
+
+    user.suspend(now);
+
+    assertThat(user.getStatus()).isEqualTo(UserStatus.SUSPENDED);
+    assertThat(user.getSuspendedUntil()).isEqualTo(now.plusDays(7));
   }
 }

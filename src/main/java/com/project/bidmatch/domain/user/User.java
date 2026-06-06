@@ -68,6 +68,8 @@ public class User extends BaseEntity {
         .build();
   }
 
+  private static final int SUSPENSION_DAYS = 7;
+
   public void updateNickname(String nickname) {
     this.nickname = nickname;
   }
@@ -84,7 +86,8 @@ public class User extends BaseEntity {
     return encoder.matches(rawPassword, this.passwordHash);
   }
 
-  public void suspend() {
+  public void suspend(LocalDateTime now) {
     this.status = UserStatus.SUSPENDED;
+    this.suspendedUntil = now.plusDays(SUSPENSION_DAYS);
   }
 }
