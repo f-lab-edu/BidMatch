@@ -8,8 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.project.bidmatch.domain.user.User;
+import com.project.bidmatch.domain.user.UserStatus;
 import com.project.bidmatch.fixture.UserFixture;
 import com.project.bidmatch.repository.UserRepository;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -170,7 +172,61 @@ public class UserIntegrationTest {
         .andExpect(jsonPath("$.email").value("test@bidmatch.com"))
         .andExpect(jsonPath("$.nickname").value("테스트"))
         .andExpect(jsonPath("$.penaltyCount").value(0));
+  }
 
+  @Test
+  @DisplayName("정지 후 7일 이내면 isSuspended는 true")
+  void isSuspended_true_within7days() {
+    User user = User.signup("test@bidmatch.com", "테스트", "hashed");
+    LocalDateTime now = LocalDateTime.of(2026, 6, 6, 10, 0);
+    user.suspend(now);
+
+    assertThat(user.isSuspended(now.plusDays(6))).isTrue();
+  }
+
+  @Test
+  @DisplayName("정지 만료(정확히 7일째) 시점엔 isSuspended는 false")
+  void isSuspended_false_at7days() {
+    User user = User.signup("test@bidmatch.com", "테스트", "hashed");
+    LocalDateTime now = LocalDateTime.of(2026, 6, 6, 10, 0);
+    user.suspend(now);
+
+    // now == suspendedUntil → isBefore가 false → 해제. 경계값 검증
+    assertThat(user.isSuspended(now.plusDays(7))).isFalse();
+  }
+
+  @Test
+  @DisplayName("정지된 적 없는 유저는 항상 isSuspended false")
+  void isSuspended_false_whenNeverSuspended() {
+    User user = User.signup("test@bidmatch.com", "테스트", "hashed");
+
+    assertThat(user.isSuspended(LocalDateTime.now())).isFalse();
+  }
+
+  @Test
+  @DisplayName("만료된 정지는 releaseIfExpired로 ACTIVE 복귀 + suspendedUntil 비워짐")
+  void releaseIfExpired_reactivates() {
+    User user = User.signup("test@bidmatch.com", "테스트", "hashed");
+    LocalDateTime now = LocalDateTime.of(2026, 5, 30, 10, 0);
+    user.suspend(now);
+
+    user.releaseIfExpired(now.plusDays(7));
+
+    assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    assertThat(user.getSuspendedUntil()).isNull();
+  }
+
+  @Test
+  @DisplayName("아직 만료 전이면 releaseIfExpired는 아무것도 안 바꿈")
+  void releaseIfExpired_noop_whenNotExpired() {
+    User user = User.signup("test@bidmatch.com", "테스트", "hashed");
+    LocalDateTime now = LocalDateTime.of(2026, 6, 6, 10, 0);
+    user.suspend(now);
+
+    user.releaseIfExpired(now.plusDays(6));
+
+    assertThat(user.getStatus()).isEqualTo(UserStatus.SUSPENDED);
+    assertThat(user.getSuspendedUntil()).isEqualTo(now.plusDays(7));
   }
 }
 

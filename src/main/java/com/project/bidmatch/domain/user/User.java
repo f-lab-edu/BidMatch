@@ -78,10 +78,6 @@ public class User extends BaseEntity {
     this.passwordHash = encodedPassword;
   }
 
-  public boolean isActive() {
-    return status == UserStatus.ACTIVE;
-  }
-
   public boolean matchesPassword(String rawPassword, PasswordEncoder encoder) {
     return encoder.matches(rawPassword, this.passwordHash);
   }
@@ -89,5 +85,21 @@ public class User extends BaseEntity {
   public void suspend(LocalDateTime now) {
     this.status = UserStatus.SUSPENDED;
     this.suspendedUntil = now.plusDays(SUSPENSION_DAYS);
+  }
+
+  // 입찰 차단은 이걸로 검사
+  public boolean isSuspended(LocalDateTime now) {
+    return status == UserStatus.SUSPENDED
+        && suspendedUntil != null
+        && now.isBefore(suspendedUntil);
+  }
+
+  public void releaseIfExpired(LocalDateTime now) {
+    if (status == UserStatus.SUSPENDED
+        && suspendedUntil != null
+        && !now.isBefore(suspendedUntil)) { // now >= suspendedUntil (만료됨)
+      this.status = UserStatus.ACTIVE;
+      this.suspendedUntil = null;
+    }
   }
 }
