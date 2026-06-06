@@ -108,4 +108,26 @@ public class AuthIntegrationTest {
     // 3. 세션 무효화 확인
     assertThat(session.isInvalid()).isTrue();
   }
+
+  @Test
+  @DisplayName("SUSPENDED 상태여도 로그인은 성공한다 (입찰만 제한)")
+  void loginSuccess_suspendedUser() throws Exception {
+    // given: 정지된 유저 저장
+    User suspended = UserFixture.aUser()
+        .email("suspended@bidmatch.com")
+        .nickname("정지유저")
+        .build(passwordEncoder);
+    suspended.suspend();
+    userRepository.save(suspended);
+
+    // when & then: 로그인 성공 (200) + 세션 생성
+    MvcResult result = mockMvc.perform(post("/api/auth/login")
+            .param("email", "suspended@bidmatch.com")
+            .param("password", RAW_PASSWORD))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+    assertThat(session).isNotNull();
+  }
 }

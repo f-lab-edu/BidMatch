@@ -83,4 +83,8 @@ public class User extends BaseEntity {
   public boolean matchesPassword(String rawPassword, PasswordEncoder encoder) {
     return encoder.matches(rawPassword, this.passwordHash);
   }
+
+  public void suspend() {
+    this.status = UserStatus.SUSPENDED;
+  }
 }

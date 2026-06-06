@@ -14,7 +14,6 @@ public class CustomUserPrincipal implements UserDetails {
   private final String email;
   private final String password;
   private final Collection<? extends GrantedAuthority> authorities;
-  private final boolean isActive;
 
   @Override
   public String getUsername() {
@@ -37,7 +36,9 @@ public class CustomUserPrincipal implements UserDetails {
   }
 
   @Override
+  // Spring Security는 비밀번호 검사 전에 isEnabled()를 보는데 false면 DisabledException으로 막아버림
+  // return isActive; 를 할 경우 SUSPENDED 상태인 유저는 로그인 자체가 불가능 하게 됨.
   public boolean isEnabled() {
-    return isActive;
+    return true;
   }
 }

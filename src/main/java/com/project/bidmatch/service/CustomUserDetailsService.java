@@ -1,7 +1,5 @@
 package com.project.bidmatch.service;
 
-import com.project.bidmatch.common.exception.BusinessException;
-import com.project.bidmatch.common.exception.ErrorCode;
 import com.project.bidmatch.domain.user.User;
 import com.project.bidmatch.repository.UserRepository;
 import java.util.List;
@@ -23,16 +21,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-    if(!user.isActive()) {
-      throw new BusinessException(ErrorCode.USER_SUSPENDED);
-    }
-
     return new CustomUserPrincipal(
         user.getId(),
         user.getEmail(),
         user.getPasswordHash(),
-        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
-        user.isActive()
+        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
     );
   }
 }
