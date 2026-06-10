@@ -15,7 +15,9 @@ public enum ErrorCode {
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"),
   CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다"),
   SAME_AS_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
-  SAME_AS_CURRENT_NICKNAME(HttpStatus.BAD_REQUEST, "기존 닉네임과 동일합니다");
+  SAME_AS_CURRENT_NICKNAME(HttpStatus.BAD_REQUEST, "기존 닉네임과 동일합니다"),
+  DUPLICATED_BRAND_NAME(HttpStatus.CONFLICT,"이미 존재하는 브랜드 이름입니다"),
+  BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "브랜드를 찾을 수 없습니다");
 
   private final HttpStatus status;
   private final String message;
