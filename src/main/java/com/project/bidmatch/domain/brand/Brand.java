@@ -39,7 +39,7 @@ public class Brand extends BaseEntity {
   }
 
 
-  static Brand createBrand(String name, String englishName, String logoUrl) {
+  public static Brand createBrand(String name, String englishName, String logoUrl) {
     return Brand.builder()
         .name(name)
         .englishName(englishName)
@@ -47,9 +47,9 @@ public class Brand extends BaseEntity {
         .build();
   }
 
-  public void updateBrand(Brand brand) {
-    this.name = brand.getName();
-    this.englishName = brand.getEnglishName();
-    this.logoUrl = brand.getLogoUrl();
+  public void updateBrand(String name, String englishName, String logoUrl) {
+    this.name = name;
+    this.englishName = englishName;
+    this.logoUrl = logoUrl;
   }
 }
