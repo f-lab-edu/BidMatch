@@ -5,6 +5,8 @@ import com.project.bidmatch.domain.brand.Brand;
 import com.project.bidmatch.domain.category.Category;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "products")
@@ -48,6 +51,10 @@ public class Product extends BaseEntity {
   @Column(name = "image_url")
   private String imageUrl;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ProductStatus status;
+
   @Builder
   private Product(String name, Brand brand, Category category, String modelNumber,
       BigDecimal releasePrice, String imageUrl) {
@@ -57,6 +64,7 @@ public class Product extends BaseEntity {
     this.modelNumber = modelNumber;
     this.releasePrice = releasePrice;
     this.imageUrl = imageUrl;
+    this.status = ProductStatus.ACTIVE;
   }
 
   public static Product create(String name, Brand brand, Category category, String modelNumber,
