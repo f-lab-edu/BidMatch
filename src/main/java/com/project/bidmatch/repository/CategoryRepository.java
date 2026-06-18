@@ -8,4 +8,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
   boolean existsByParentIsNullAndName(String name);
 
   boolean existsByParentAndName(Category parent, String name);
+
+  boolean existsByParent(Category parent);
 }
