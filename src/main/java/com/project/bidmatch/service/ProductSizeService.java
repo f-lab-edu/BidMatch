@@ -4,6 +4,7 @@ import com.project.bidmatch.common.exception.BusinessException;
 import com.project.bidmatch.common.exception.ErrorCode;
 import com.project.bidmatch.domain.product.Product;
 import com.project.bidmatch.domain.product.ProductSize;
+import com.project.bidmatch.domain.product.ProductStatus;
 import com.project.bidmatch.dto.ProductSizeCreateRequest;
 import com.project.bidmatch.dto.ProductSizeResponse;
 import com.project.bidmatch.repository.ProductRepository;
@@ -22,10 +23,9 @@ public class ProductSizeService {
 
   @Transactional
   public ProductSizeResponse addSize(Long productId, ProductSizeCreateRequest request) {
-    Product product = productRepository.findById(productId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    Product product = findActiveProduct(productId);
 
-    if (productSizeRepository.existsByProductAndSize(product, request.size())) {
+    if(productSizeRepository.existsByProductAndSize(product, request.size())) {
       throw new BusinessException(ErrorCode.DUPLICATED_PRODUCT_SIZE);
     }
 
@@ -35,11 +35,29 @@ public class ProductSizeService {
 
   @Transactional(readOnly = true)
   public List<ProductSizeResponse> findSizes(Long productId) {
-    Product product = productRepository.findById(productId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-
-    return productSizeRepository.findByProduct(product).stream()
+    Product product = findActiveProduct(productId);
+    return productSizeRepository.findByProductAndStatus(product, ProductStatus.ACTIVE).stream()
         .map(ProductSizeResponse::from)
         .toList();
+  }
+
+  @Transactional
+  public void deleteSize(Long productId, Long sizeId) {
+    ProductSize size = productSizeRepository.findById(sizeId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_SIZE_NOT_FOUND));
+    // 경로의 productId와 실제 소속이 다르거나 이미 비활성이면 없는 것으로 취급
+    if(!size.getProduct().getId().equals(productId) || !size.isActive()) {
+      throw new BusinessException(ErrorCode.PRODUCT_SIZE_NOT_FOUND);
+    }
+    size.deactivate();
+  }
+
+  private Product findActiveProduct(Long productId) {
+    Product product = productRepository.findById(productId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    if(!product.isActive()) {
+      throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+    return product;
   }
 }

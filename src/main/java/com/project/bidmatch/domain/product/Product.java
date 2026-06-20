@@ -78,4 +78,17 @@ public class Product extends BaseEntity {
         .imageUrl(imageUrl)
         .build();
   }
+
+  public void update(String name, String imageUrl) {
+    this.name = name;
+    this.imageUrl = imageUrl;
+  }
+
+  public void deactivate() {
+    this.status = ProductStatus.INACTIVE;
+  }
+
+  public boolean isActive() {
+    return this.status == ProductStatus.ACTIVE;
+  }
 }

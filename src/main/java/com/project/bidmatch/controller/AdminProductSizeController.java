@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,5 +28,11 @@ public class AdminProductSizeController {
   public ProductSizeResponse create(@PathVariable Long productId, @Validated @RequestBody
   ProductSizeCreateRequest request) {
     return productSizeService.addSize(productId, request);
+  }
+
+  @DeleteMapping("/{sizeId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(@PathVariable Long productId, @PathVariable Long sizeId) {
+    productSizeService.deleteSize(productId, sizeId);
   }
 }

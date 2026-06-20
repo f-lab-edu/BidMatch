@@ -1,18 +1,25 @@
 package com.project.bidmatch.product;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.project.bidmatch.domain.brand.Brand;
 import com.project.bidmatch.domain.category.Category;
+import com.project.bidmatch.domain.product.Product;
+import com.project.bidmatch.domain.product.ProductSize;
 import com.project.bidmatch.domain.user.UserRole;
 import com.project.bidmatch.fixture.UserFixture;
 import com.project.bidmatch.repository.BrandRepository;
 import com.project.bidmatch.repository.CategoryRepository;
 import com.project.bidmatch.repository.ProductRepository;
+import com.project.bidmatch.repository.ProductSizeRepository;
 import com.project.bidmatch.repository.UserRepository;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +50,8 @@ public class ProductIntegrationTest {
   @Autowired
   ProductRepository productRepository;
   @Autowired
+  ProductSizeRepository productSizeRepository;
+  @Autowired
   PasswordEncoder passwordEncoder;
 
   private static final String RAW_PASSWORD = "Password1!";
@@ -50,10 +59,12 @@ public class ProductIntegrationTest {
   private Brand brand;
   private Category leafCategory;  // 스니커즈 (자식 없음)
   private Category rootCategory;  // 신발 (스니커즈를 자식으로 가짐)
+  private Product product;        // 출시가 139000 시드
 
   @BeforeEach
   void setUp() {
     userRepository.deleteAll();
+    productSizeRepository.deleteAll();
     productRepository.deleteAll();
     categoryRepository.deleteAll();
     brandRepository.deleteAll();
@@ -65,9 +76,14 @@ public class ProductIntegrationTest {
         .email("user@bidmatch.com").nickname("유저").role(UserRole.USER)
         .build(passwordEncoder));
 
-    brand = brandRepository.save(Brand.createBrand("나이키", "Nike", "https://x.com/n.png"));
+    brand = brandRepository.save(Brand.createBrand("나이키", "Nike",
+        "https://x.com/n.png"));
     rootCategory = categoryRepository.save(Category.createRoot("신발"));
-    leafCategory = categoryRepository.save(Category.createChild("스니커즈", rootCategory));
+    leafCategory = categoryRepository.save(Category.createChild("스니커즈",
+        rootCategory));
+    product = productRepository.save(
+        Product.create("에어포스1", brand, leafCategory, "AF1-001", new
+            BigDecimal("139000"), null));
   }
 
   private MockHttpSession login(String email) throws Exception {
@@ -108,7 +124,8 @@ public class ProductIntegrationTest {
     mockMvc.perform(post("/api/admin/products")
             .session(session)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(createBody("DZ5485-612", brand.getId(), leafCategory.getId())))
+            .content(createBody("DZ5485-612", brand.getId(),
+                leafCategory.getId())))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.modelNumber").value("DZ5485-612"))
         .andExpect(jsonPath("$.brandName").value("나이키"))
@@ -126,7 +143,7 @@ public class ProductIntegrationTest {
           "brandId": %d,
           "categoryId": %d,
           "modelNumber": "NO-IMG-1",
-          "releasePrice": 139000
+          "releasePrice": 139000 
         }
         """.formatted(brand.getId(), leafCategory.getId());
 
@@ -254,7 +271,7 @@ public class ProductIntegrationTest {
     MockHttpSession userSession = loginAsUser();
     mockMvc.perform(get("/api/products").session(userSession))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1));
+        .andExpect(jsonPath("$.length()").value(2)); // setUp 시드 1 + 방금 등록 1
   }
 
   @Test
@@ -265,5 +282,58 @@ public class ProductIntegrationTest {
     mockMvc.perform(get("/api/products/99999").session(session))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("상품을 찾을 수 없습니다"));
+  }
+
+  @Test
+  @DisplayName("상품 수정 시 출시가는 변경되지 않는다")
+  void update_releasePrice_ignored() throws Exception {
+    MockHttpSession session = loginAsAdmin();
+    String body = """
+                {"name": "수정된이름", "imageUrl": "https://x.com/new.png",
+        "releasePrice": 999999}
+        """;
+
+    mockMvc.perform(put("/api/admin/products/" + product.getId())
+            .session(session)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("수정된이름"));
+
+    assertThat(productRepository.findById(product.getId()).orElseThrow().getReleasePrice())
+        .isEqualByComparingTo(new BigDecimal("139000"));
+  }
+
+  @Test
+  @DisplayName("상품 삭제 후 단건 조회는 404, 목록엔 안 나온다")
+  void softDelete_thenHidden() throws Exception {
+    MockHttpSession session = loginAsAdmin();
+    mockMvc.perform(delete("/api/admin/products/" +
+            product.getId()).session(session))
+        .andExpect(status().isNoContent());
+
+    mockMvc.perform(get("/api/products/" + product.getId()).session(session))
+        .andExpect(status().isNotFound());
+    mockMvc.perform(get("/api/products").session(session))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+  }
+
+  @Test
+  @DisplayName("사이즈 삭제 후 사이즈 목록에서 제외된다")
+  void deleteSize_thenExcluded() throws Exception {
+    MockHttpSession session = loginAsAdmin();
+    ProductSize saved = productSizeRepository.save(ProductSize.create(product,
+        "270"));
+
+    mockMvc.perform(delete("/api/admin/products/" + product.getId() + "/sizes/" +
+            saved.getId())
+            .session(session))
+        .andExpect(status().isNoContent());
+
+    mockMvc.perform(get("/api/products/" + product.getId() +
+            "/sizes").session(session))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
   }
 }

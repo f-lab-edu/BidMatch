@@ -5,8 +5,10 @@ import com.project.bidmatch.common.exception.ErrorCode;
 import com.project.bidmatch.domain.brand.Brand;
 import com.project.bidmatch.domain.category.Category;
 import com.project.bidmatch.domain.product.Product;
+import com.project.bidmatch.domain.product.ProductStatus;
 import com.project.bidmatch.dto.ProductCreateRequest;
 import com.project.bidmatch.dto.ProductResponse;
+import com.project.bidmatch.dto.ProductUpdateRequest;
 import com.project.bidmatch.repository.BrandRepository;
 import com.project.bidmatch.repository.CategoryRepository;
 import com.project.bidmatch.repository.ProductRepository;
@@ -53,13 +55,36 @@ public class ProductService {
 
   @Transactional(readOnly = true)
   public List<ProductResponse> findAllProducts() {
-    return productRepository.findAll().stream().map(ProductResponse::from).toList();
+    return productRepository.findByStatus(ProductStatus.ACTIVE).stream()
+        .map(ProductResponse::from)
+        .toList();
   }
 
   @Transactional(readOnly = true)
   public ProductResponse findProductById(Long id) {
+    return ProductResponse.from(findActiveProduct(id));
+  }
+
+  @Transactional
+  public ProductResponse updateProduct(Long id, ProductUpdateRequest request) {
+    Product product = findActiveProduct(id);
+    product.update(request.name(), request.imageUrl());
+    return ProductResponse.from(product);
+  }
+
+  @Transactional
+  public void deleteProduct(Long id) {
+    Product product = findActiveProduct(id);
+    product.deactivate();
+  }
+
+  // INACTIVE는 "없는 것"으로 취급 -> 404
+  private Product findActiveProduct(Long id) {
     Product product = productRepository.findById(id)
         .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-    return ProductResponse.from(product);
+    if(!product.isActive()) {
+      throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+    }
+    return product;
   }
 }
