@@ -23,7 +23,8 @@ public enum ErrorCode {
   CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다"),
   PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다"),
   DUPLICATED_MODEL_NUMBER(HttpStatus.CONFLICT, "이미 존재하는 모델번호입니다"),
-  NOT_LEAF_CATEGORY(HttpStatus.BAD_REQUEST, "최하위(리프) 카테고리에만 상품을 등록할 수 있습니다");
+  NOT_LEAF_CATEGORY(HttpStatus.BAD_REQUEST, "최하위(리프) 카테고리에만 상품을 등록할 수 있습니다"),
+  DUPLICATED_PRODUCT_SIZE(HttpStatus.CONFLICT, "이미 등록된 사이즈입니다"),;
 
 
   private final HttpStatus status;
