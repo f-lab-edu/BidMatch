@@ -17,7 +17,14 @@ public enum ErrorCode {
   SAME_AS_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
   SAME_AS_CURRENT_NICKNAME(HttpStatus.BAD_REQUEST, "기존 닉네임과 동일합니다"),
   DUPLICATED_BRAND_NAME(HttpStatus.CONFLICT,"이미 존재하는 브랜드 이름입니다"),
-  BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "브랜드를 찾을 수 없습니다");
+  BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "브랜드를 찾을 수 없습니다"),
+  DUPLICATED_CATEGORY_NAME(HttpStatus.CONFLICT, "같은 부모 아래 동일한 이름의 카테고리가 있습니다"),
+  PARENT_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 카테고리를 찾을 수 없습니다"),
+  CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다"),
+  PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다"),
+  DUPLICATED_MODEL_NUMBER(HttpStatus.CONFLICT, "이미 존재하는 모델번호입니다"),
+  NOT_LEAF_CATEGORY(HttpStatus.BAD_REQUEST, "최하위(리프) 카테고리에만 상품을 등록할 수 있습니다");
+
 
   private final HttpStatus status;
   private final String message;
