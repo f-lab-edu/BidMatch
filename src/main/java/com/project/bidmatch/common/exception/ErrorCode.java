@@ -20,7 +20,7 @@ public enum ErrorCode {
   BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "브랜드를 찾을 수 없습니다"),
   DUPLICATED_CATEGORY_NAME(HttpStatus.CONFLICT, "같은 부모 아래 동일한 이름의 카테고리가 있습니다"),
   PARENT_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 카테고리를 찾을 수 없습니다"),
-  CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다"),;
+  CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다");
 
 
   private final HttpStatus status;
